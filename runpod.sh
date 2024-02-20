@@ -1,6 +1,3 @@
-read -p "GITHUB_API_TOKEN=" GITHUB_API_TOKEN
-export GITHUB_API_TOKEN=$GITHUB_API_TOKEN
-
 function install_dependencies() {
     # Update package lists and install vim and git-lfs.
     echo "Updating package lists..."
@@ -175,6 +172,8 @@ while [[ "$BENCHMARK" != "nous" && "$BENCHMARK" != "openllm" ]]; do
 done
 
 # Record the start time of the script.
+read -p "GITHUB_API_TOKEN=" GITHUB_API_TOKEN
+export GITHUB_API_TOKEN=$GITHUB_API_TOKEN
 start=$(date +%s)
 cuda_devices=$(setup_cuda_devices)
 
