@@ -1,6 +1,5 @@
-#!/bin/bash
-
-# Improved Bash Script for Benchmarking Models
+read -p "GITHUB_API_TOKEN=" GITHUB_API_TOKEN
+export GITHUB_API_TOKEN=$GITHUB_API_TOKEN
 
 function install_dependencies() {
     # Update package lists and install vim and git-lfs.
@@ -35,7 +34,9 @@ function run_benchmark() {
     local model=$2
     local trust_remote_code=$3
     local cuda_devices=$4
-
+    export BENCHMARK=$benchmark
+    export MODEL=$model
+    export TRUST_REMOTE_CODE=$trust_remote_code
 
     # Run evaluation based on the BENCHMARK environment variable
     # The following block is executed if BENCHMARK is set to 'nous'.
