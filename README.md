@@ -15,6 +15,9 @@
 <img src='img/llmautoeval.png'>
 </p>
 
+## Run locally in Screen session (bash one-liner):
+DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt install -y screen && git clone https://github.com/CultriX-Github/llm-autoeval && cd llm-autoeval && screen -S autoeval -m bash runpod.sh 
+
 ## 🔍 Overview
 
 LLM AutoEval **simplifies the process of evaluating LLMs** using a convenient [Colab notebook](https://colab.research.google.com/drive/1Igs3WZuXAIv9X0vwqiE90QlEPys8e8Oa?usp=sharing). You just need to specify the name of your model, a GPU, and press run!
