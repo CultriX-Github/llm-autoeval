@@ -1,40 +1,62 @@
 #!/bin/bash
 
+# Since we are running locally, we need these variables set manually
+read -p "The model you want to benchmark: " MODEL
+read -p "Your api token for uploading the results as a gist: " GITHUB_API_TOKEN
+export TRUST_REMOTE_CODE=True
+read -p "Enter which benchmark you want to run (nous/openllm): " BENCHMARK
+while [[ "$BENCHMARK" != "nous" && "$BENCHMARK" != "openllm" ]]; do
+   echo "Waiting for valid benchmark (nous or openllm)"
+   read -p "Enter benchmark: " BENCHMARK
+ done
+
+# Record the start time of the script.
 start=$(date +%s)
 
-# Detect the number of NVIDIA GPUs and create a device string
+# Count the number of NVIDIA GPUs available
 gpu_count=$(nvidia-smi -L | wc -l)
+
+# If no NVIDIA GPUs are detected, print a message and exit the script.
 if [ $gpu_count -eq 0 ]; then
     echo "No NVIDIA GPUs detected. Exiting."
     exit 1
 fi
+
 # Construct the CUDA device string
 cuda_devices=""
 for ((i=0; i<gpu_count; i++)); do
     if [ $i -gt 0 ]; then
         cuda_devices+=","
     fi
+    # Create a string of CUDA device IDs (0,1,2,...) based on the number of GPUs.
     cuda_devices+="$i"
 done
 
-# Install dependencies
-apt update
-apt install -y screen vim git-lfs
-screen
 
-# Install common libraries
+# Update package lists and install screen, vim, and git-lfs.
+DEBIAN_FRONTEND=noninteractive apt update -y && \
+DEBIAN_FRONTEND=noninteractive apt install -y vim git-lfs
+
+
+# Install Python libraries: requests, accelerate, sentencepiece, pytablewriter, einops, and protobuf.
 pip install -q requests accelerate sentencepiece pytablewriter einops protobuf
 
+# If in debug mode, print a message indicating that.
 if [ "$DEBUG" == "True" ]; then
     echo "Launch LLM AutoEval in debug mode"
 fi
 
-# Run evaluation
+# Run evaluation based on the BENCHMARK environment variable
+# The following block is executed if BENCHMARK is set to 'nous'.
 if [ "$BENCHMARK" == "nous" ]; then
+    # Clone a specific branch of a GitHub repository
     git clone -b add-agieval https://github.com/dmahan93/lm-evaluation-harness
+    # Enter the directory of the cloned repository
     cd lm-evaluation-harness
+    # Install its contents
     pip install -e .
 
+    # Several benchmarks are run with different tasks, each writing results to a JSON file.
     benchmark="agieval"
     python main.py \
         --model hf-causal \
@@ -71,11 +93,18 @@ if [ "$BENCHMARK" == "nous" ]; then
         --batch_size auto \
         --output_path ./${benchmark}.json
 
+    # Record the end time and calculate the elapsed time.
     end=$(date +%s)
     echo "Elapsed Time: $(($end-$start)) seconds"
-    
-    python ../llm-autoeval/main.py . $(($end-$start))
 
+    # Run another Python script to upload the results as a GitHub gist.
+    python ../main.py . $(($end-$start))
+    ### Note: I changed this and this resolved the error of the results not uploading.
+    ### from: ../llm-evaluation/main.py . $(($end-$start))
+    ### to: ../main.py . $(($end-$start))
+
+# Run evaluation based on the BENCHMARK environment variable
+# The following block is executed if BENCHMARK is set to 'openllm'.
 elif [ "$BENCHMARK" == "openllm" ]; then
     git clone https://github.com/EleutherAI/lm-evaluation-harness
     cd lm-evaluation-harness
@@ -106,7 +135,7 @@ elif [ "$BENCHMARK" == "openllm" ]; then
     #     --batch_size auto \
     #     --verbosity DEBUG \
     #     --output_path ./${benchmark}.json
-    
+
     benchmark="truthfulqa"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
@@ -114,7 +143,7 @@ elif [ "$BENCHMARK" == "openllm" ]; then
         --num_fewshot 0 \
         --batch_size auto \
         --output_path ./${benchmark}.json
-    
+
     benchmark="winogrande"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
@@ -122,7 +151,7 @@ elif [ "$BENCHMARK" == "openllm" ]; then
         --num_fewshot 5 \
         --batch_size auto \
         --output_path ./${benchmark}.json
-    
+
     benchmark="gsm8k"
     lm_eval --model vllm \
         --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
@@ -131,15 +160,25 @@ elif [ "$BENCHMARK" == "openllm" ]; then
         --batch_size auto \
         --output_path ./${benchmark}.json
 
+    # Record the end time and calculate the elapsed time.
     end=$(date +%s)
     echo "Elapsed Time: $(($end-$start)) seconds"
-    
-    python ../llm-autoeval/main.py . $(($end-$start))
+
+    # Run another Python script to upload the results as a GitHub gist.
+    python ../main.py . $(($end-$start))
+    ### Note: I changed this and this resolved the error of the results not uploading.
+    ### from: ../llm-evaluation/main.py . $(($end-$start))
+    ### to: ../main.py . $(($end-$start))
+
+# If BENCHMARK is neither 'nous' nor 'openllm', print an error message.
 else
     echo "Error: Invalid BENCHMARK value. Please set BENCHMARK to 'nous' or 'openllm'."
 fi
 
+# If not in debug mode, remove the pod using the RUNPOD_POD_ID environment variable.
 if [ "$DEBUG" == "False" ]; then
     runpodctl remove pod $RUNPOD_POD_ID
 fi
+
+# Prevent the script from exiting immediately.
 sleep infinity
