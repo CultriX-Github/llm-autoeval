@@ -16,7 +16,7 @@
 </p>
 
 ## Run locally in Screen session (bash one-liner):
-DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt install -y screen && git clone https://github.com/CultriX-Github/llm-autoeval && cd llm-autoeval && screen -S autoeval -m bash runpod.sh 
+`DEBIAN_FRONTEND=noninteractive apt update -y && DEBIAN_FRONTEND=noninteractive apt install -y screen && git clone https://github.com/CultriX-Github/llm-autoeval && cd llm-autoeval && screen -S autoeval -m bash runpod.sh`
 
 ## 🔍 Overview
 
