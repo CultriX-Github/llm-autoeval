@@ -166,7 +166,7 @@ read -p "The model you want to benchmark: " MODEL
 read -p "Your api token for uploading the results as a gist: " GITHUB_API_TOKEN
 export TRUST_REMOTE_CODE=True
 read -p "Do not delete Pod when done? (True = Keep |False = Delete): " DEBUG
-while [[ "$DEBUG" != "True" && "$BENCHMARK" != "False" ]]; do
+while [[ "$DEBUG" != "True" && "$DEBUG" != "False" ]]; do
    echo "Invalid value. Please enter 'True' or 'False'."
    read -p "Do not delete Pod when done? (True = Keep|False = Delete): " DEBUG
 done
