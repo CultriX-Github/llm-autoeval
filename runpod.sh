@@ -26,6 +26,14 @@ function setup_cuda_devices() {
     echo $cuda_devices
 }
 
+function upload_results() {
+    # Record the end time and calculate the elapsed time.
+    end=$(date +%s)
+    echo "Elapsed Time: $(($end-$start)) seconds"
+    # Run another Python script to upload the results as a GitHub gist.
+    python ../main.py . $(($end-$start))
+}
+
 function run_benchmark() {
     local benchmark=$1
     local model=$2
@@ -81,7 +89,9 @@ function run_benchmark() {
             --device cuda:$cuda_devices \
             --batch_size auto \
             --output_path ./${benchmark}.json
-
+            
+        upload_results . $end
+        
     # Run evaluation based on the BENCHMARK environment variable
     # The following block is executed if BENCHMARK is set to 'openllm'.
     elif [ "$benchmark" == "openllm" ]; then
@@ -143,7 +153,8 @@ function run_benchmark() {
             --num_fewshot 5 \
             --batch_size auto \
             --output_path ./${benchmark}.json
-
+         
+        upload_results . $end
     # Give an error message if an invalid benchmark is specified
     else
         echo "Invalid benchmark specified"
@@ -151,19 +162,13 @@ function run_benchmark() {
     fi
 }
 
-function upload_results() {
-    # Record the end time and calculate the elapsed time.
-    end=$(date +%s)
-    echo "Elapsed Time: $(($end-$start)) seconds"
-    # Run another Python script to upload the results as a GitHub gist.
-    python ../main.py . $(($end-$start))
-}
-
 # Main script starts here
 # Get some user input:
 echo "Benchmarking Model Script"
 read -p "The model you want to benchmark: " MODEL
+export MODEL=$MODEL
 read -p "Your api token for uploading the results as a gist: " GITHUB_API_TOKEN
+export GITHUB_API_TOKEN=$GITHUB_API_TOKEN
 export TRUST_REMOTE_CODE=True
 read -p "Do not delete Pod when done? (True = Keep |False = Delete): " DEBUG
 while [[ "$DEBUG" != "True" && "$DEBUG" != "False" ]]; do
@@ -176,6 +181,7 @@ while [[ "$BENCHMARK" != "nous" && "$BENCHMARK" != "openllm" ]]; do
    echo "Invalid benchmark ($BENCHMARK). Please enter 'nous' or 'openllm'."
    read -p "Enter benchmark: " BENCHMARK
 done
+EXPORT BENCHMARK=$BENCHMARK
 
 # Record the start time of the script.
 start=$(date +%s)
@@ -183,9 +189,6 @@ cuda_devices=$(setup_cuda_devices)
 
 install_dependencies
 run_benchmark $BENCHMARK $MODEL $TRUST_REMOTE_CODE $cuda_devices
-
-end=$(date +%s)
-upload_results $end
 
 # If in debug mode, print a message indicating that.
 if [ "$DEBUG" == "False" ]; then
