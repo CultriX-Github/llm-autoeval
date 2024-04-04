@@ -165,6 +165,12 @@ echo "Benchmarking Model Script"
 read -p "The model you want to benchmark: " MODEL
 read -p "Your api token for uploading the results as a gist: " GITHUB_API_TOKEN
 export TRUST_REMOTE_CODE=True
+read -p "Do not delete Pod when done? (True = Keep |False = Delete): " DEBUG
+while [[ "$DEBUG" != "True" && "$BENCHMARK" != "False" ]]; do
+   echo "Invalid value. Please enter 'True' or 'False'."
+   read -p "Do not delete Pod when done? (True = Keep|False = Delete): " DEBUG
+done
+
 read -p "Enter which benchmark you want to run (nous/openllm): " BENCHMARK
 while [[ "$BENCHMARK" != "nous" && "$BENCHMARK" != "openllm" ]]; do
    echo "Invalid benchmark ($BENCHMARK). Please enter 'nous' or 'openllm'."
@@ -187,3 +193,6 @@ if [ "$DEBUG" == "False" ]; then
 fi
 
 echo "Benchmark completed successfully."
+if [ "$DEBUG" == "False" ]; then
+    runpodctl remove pod $RUNPOD_POD_ID
+fi
