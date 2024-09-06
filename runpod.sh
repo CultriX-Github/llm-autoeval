@@ -5,7 +5,7 @@ function install_dependencies() {
 		DEBIAN_FRONTEND=noninteractive apt-get install -y vim git-lfs
 	# Install Python libraries: requests, accelerate, sentencepiece, pytablewriter, einops, and protobuf.
 	echo "Installing Python libraries..."
-	pip install -q requests accelerate sentencepiece pytablewriter einops protobuf flash-attention || {
+	pip install --upgrade requests accelerate sentencepiece pytablewriter einops protobuf flash-attention --progress-bar on || {
 		echo "Failed to install Python libraries"
 		exit 1
 	}
