@@ -5,7 +5,7 @@ function install_dependencies() {
     DEBIAN_FRONTEND=noninteractive apt-get install -y vim git-lfs
     # Install Python libraries: requests, accelerate, sentencepiece, pytablewriter, einops, and protobuf.
     echo "Installing Python libraries..."
-    pip install -q requests accelerate sentencepiece pytablewriter einops protobuf || { echo "Failed to install Python libraries"; exit 1; }
+    pip install -q requests accelerate sentencepiece pytablewriter einops protobuf flash-attention || { echo "Failed to install Python libraries"; exit 1; }
 }
 
 function setup_cuda_devices() {
