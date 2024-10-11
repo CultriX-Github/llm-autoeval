@@ -61,7 +61,7 @@ function run_benchmark() {
 
 		# Several benchmarks are run with different tasks, each writing results to a JSON file.
 		benchmark="agieval"
-		python main.py \
+		TRUST_REMOTE_CODE=True python main.py \
 			--model hf-causal \
 			--model_args pretrained=$MODEL,trust_remote_code=True \
 			--tasks agieval_aqua_rat,agieval_logiqa_en,agieval_lsat_ar,agieval_lsat_lr,agieval_lsat_rc,agieval_sat_en,agieval_sat_en_without_passage,agieval_sat_math \
@@ -70,7 +70,7 @@ function run_benchmark() {
 			--output_path ./${benchmark}.json
 
 		benchmark="gpt4all"
-		python main.py \
+		TRUST_REMOTE_CODE=True python main.py \
 			--model hf-causal \
 			--model_args pretrained=$MODEL,trust_remote_code=True \
 			--tasks hellaswag,openbookqa,winogrande,arc_easy,arc_challenge,boolq,piqa \
@@ -79,7 +79,7 @@ function run_benchmark() {
 			--output_path ./${benchmark}.json
 
 		benchmark="truthfulqa"
-		python main.py \
+		TRUST_REMOTE_CODE=True python main.py \
 			--model hf-causal \
 			--model_args pretrained=$MODEL,trust_remote_code=True \
 			--tasks truthfulqa_mc \
@@ -88,7 +88,7 @@ function run_benchmark() {
 			--output_path ./${benchmark}.json
 
 		benchmark="bigbench"
-		python main.py \
+		TRUST_REMOTE_CODE=True python main.py \
 			--model hf-causal \
 			--model_args pretrained=$MODEL,trust_remote_code=True \
 			--tasks bigbench_causal_judgement,bigbench_date_understanding,bigbench_disambiguation_qa,bigbench_geometric_shapes,bigbench_logical_deduction_five_objects,bigbench_logical_deduction_seven_objects,bigbench_logical_deduction_three_objects,bigbench_movie_recommendation,bigbench_navigate,bigbench_reasoning_about_colored_objects,bigbench_ruin_names,bigbench_salient_translation_error_detection,bigbench_snarks,bigbench_sports_understanding,bigbench_temporal_sequences,bigbench_tracking_shuffled_objects_five_objects,bigbench_tracking_shuffled_objects_seven_objects,bigbench_tracking_shuffled_objects_three_objects \
