@@ -63,7 +63,7 @@ function run_benchmark() {
 		benchmark="agieval"
 		python main.py \
 			--model hf-causal \
-			--model_args pretrained=$MODEL,trust_remote_code=true \
+			--model_args pretrained=$MODEL,trust_remote_code=True \
 			--tasks agieval_aqua_rat,agieval_logiqa_en,agieval_lsat_ar,agieval_lsat_lr,agieval_lsat_rc,agieval_sat_en,agieval_sat_en_without_passage,agieval_sat_math \
 			--device cuda:$cuda_devices \
 			--batch_size auto \
@@ -72,7 +72,7 @@ function run_benchmark() {
 		benchmark="gpt4all"
 		python main.py \
 			--model hf-causal \
-			--model_args pretrained=$MODEL,trust_remote_code=true \
+			--model_args pretrained=$MODEL,trust_remote_code=True \
 			--tasks hellaswag,openbookqa,winogrande,arc_easy,arc_challenge,boolq,piqa \
 			--device cuda:$cuda_devices \
 			--batch_size auto \
@@ -81,7 +81,7 @@ function run_benchmark() {
 		benchmark="truthfulqa"
 		python main.py \
 			--model hf-causal \
-			--model_args pretrained=$MODEL,trust_remote_code=true \
+			--model_args pretrained=$MODEL,trust_remote_code=True \
 			--tasks truthfulqa_mc \
 			--device cuda:$cuda_devices \
 			--batch_size auto \
@@ -90,7 +90,7 @@ function run_benchmark() {
 		benchmark="bigbench"
 		python main.py \
 			--model hf-causal \
-			--model_args pretrained=$MODEL,trust_remote_code=true \
+			--model_args pretrained=$MODEL,trust_remote_code=True \
 			--tasks bigbench_causal_judgement,bigbench_date_understanding,bigbench_disambiguation_qa,bigbench_geometric_shapes,bigbench_logical_deduction_five_objects,bigbench_logical_deduction_seven_objects,bigbench_logical_deduction_three_objects,bigbench_movie_recommendation,bigbench_navigate,bigbench_reasoning_about_colored_objects,bigbench_ruin_names,bigbench_salient_translation_error_detection,bigbench_snarks,bigbench_sports_understanding,bigbench_temporal_sequences,bigbench_tracking_shuffled_objects_five_objects,bigbench_tracking_shuffled_objects_seven_objects,bigbench_tracking_shuffled_objects_three_objects \
 			--device cuda:$cuda_devices \
 			--batch_size auto \
@@ -116,7 +116,7 @@ function run_benchmark() {
 		# Several benchmarks are run with different tasks, each writing results to a JSON file.
 		benchmark="arc"
 		lm_eval --model vllm \
-			--model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=true \
+			--model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=True \
 			--tasks arc_challenge \
 			--num_fewshot 25 \
 			--batch_size auto \
@@ -124,7 +124,7 @@ function run_benchmark() {
 
 		benchmark="hellaswag"
 		lm_eval --model vllm \
-			--model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=true \
+			--model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=True \
 			--tasks hellaswag \
 			--num_fewshot 10 \
 			--batch_size auto \
@@ -141,7 +141,7 @@ function run_benchmark() {
 
 		benchmark="truthfulqa"
 		lm_eval --model vllm \
-			--model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=true \
+			--model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=True \
 			--tasks truthfulqa \
 			--num_fewshot 0 \
 			--batch_size auto \
@@ -149,7 +149,7 @@ function run_benchmark() {
 
 		benchmark="winogrande"
 		lm_eval --model vllm \
-			--model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=true \
+			--model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=True \
 			--tasks winogrande \
 			--num_fewshot 5 \
 			--batch_size auto \
@@ -157,7 +157,7 @@ function run_benchmark() {
 
 		benchmark="gsm8k"
 		lm_eval --model vllm \
-			--model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=true \
+			--model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=True \
 			--tasks gsm8k \
 			--num_fewshot 5 \
 			--batch_size auto \
@@ -178,7 +178,7 @@ read -p "The model you want to benchmark: " MODEL
 export MODEL=$MODEL
 read -p "Your api token for uploading the results as a gist: " GITHUB_API_TOKEN
 export GITHUB_API_TOKEN=$GITHUB_API_TOKEN
-export TRUST_REMOTE_CODE=true
+export TRUST_REMOTE_CODE=True
 read -p "Do not delete Pod when done? (True = Keep |False = Delete): " DEBUG
 while [[ $DEBUG != "True" && $DEBUG != "False" ]]; do
 	echo "Invalid value. Please enter 'True' or 'False'."
