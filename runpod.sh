@@ -36,7 +36,7 @@ function run_benchmark() {
 	local cuda_devices=$4
 	export BENCHMARK=$benchmark
 	export MODEL=$model
-	export TRUST_REMOTE_CODE=$trust_remote_code
+	export TRUST_REMOTE_CODE=True
 
 	if [ "$benchmark" == "nous" ]; then
 		git clone --depth 1 https://github.com/EleutherAI/lm-evaluation-harness
@@ -52,7 +52,8 @@ function run_benchmark() {
 			--tasks agieval_aqua_rat,agieval_logiqa_en,agieval_lsat_ar,agieval_lsat_lr,agieval_lsat_rc,agieval_sat_en,agieval_sat_en_without_passage,agieval_sat_math \
 			--device cuda:$cuda_devices \
 			--batch_size auto \
-			--output_path ./${benchmark}.json
+			--output_path ./${benchmark}.json \
+                        --trust_remote_code
 
 		benchmark="gpt4all"
 		TRUST_REMOTE_CODE=True lm-eval \
@@ -61,7 +62,8 @@ function run_benchmark() {
 			--tasks hellaswag,openbookqa,winogrande,arc_easy,arc_challenge,boolq,piqa \
 			--device cuda:$cuda_devices \
 			--batch_size auto \
-			--output_path ./${benchmark}.json
+			--output_path ./${benchmark}.json \
+                        --trust_remote_code
 
 		benchmark="truthfulqa"
 		TRUST_REMOTE_CODE=True lm-eval \
@@ -70,7 +72,8 @@ function run_benchmark() {
 			--tasks truthfulqa_mc \
 			--device cuda:$cuda_devices \
 			--batch_size auto \
-			--output_path ./${benchmark}.json
+			--output_path ./${benchmark}.json \
+                        --trust_remote_code
 
 		benchmark="bigbench"
 		TRUST_REMOTE_CODE=True lm-eval \
@@ -79,7 +82,8 @@ function run_benchmark() {
 			--tasks bigbench_causal_judgement,bigbench_date_understanding,bigbench_disambiguation_qa,bigbench_geometric_shapes,bigbench_logical_deduction_five_objects,bigbench_logical_deduction_seven_objects,bigbench_logical_deduction_three_objects,bigbench_movie_recommendation,bigbench_navigate,bigbench_reasoning_about_colored_objects,bigbench_ruin_names,bigbench_salient_translation_error_detection,bigbench_snarks,bigbench_sports_understanding,bigbench_temporal_sequences,bigbench_tracking_shuffled_objects_five_objects,bigbench_tracking_shuffled_objects_seven_objects,bigbench_tracking_shuffled_objects_three_objects \
 			--device cuda:$cuda_devices \
 			--batch_size auto \
-			--output_path ./${benchmark}.json
+			--output_path ./${benchmark}.json \
+                        --trust_remote_code
 
 		upload_results . $end
 
@@ -97,7 +101,8 @@ function run_benchmark() {
 			--tasks arc_challenge \
 			--num_fewshot 25 \
 			--batch_size auto \
-			--output_path ./${benchmark}.json
+			--output_path ./${benchmark}.json \
+                        --trust_remote_code
 
 		benchmark="hellaswag"
 		lm_eval --model vllm \
@@ -105,7 +110,8 @@ function run_benchmark() {
 			--tasks hellaswag \
 			--num_fewshot 10 \
 			--batch_size auto \
-			--output_path ./${benchmark}.json
+			--output_path ./${benchmark}.json \
+                        --trust_remote_code
 
 		benchmark="truthfulqa"
 		lm_eval --model vllm \
@@ -113,7 +119,8 @@ function run_benchmark() {
 			--tasks truthfulqa \
 			--num_fewshot 0 \
 			--batch_size auto \
-			--output_path ./${benchmark}.json
+			--output_path ./${benchmark}.json \
+                        --trust_remote_code
 
 		benchmark="winogrande"
 		lm_eval --model vllm \
@@ -121,7 +128,8 @@ function run_benchmark() {
 			--tasks winogrande \
 			--num_fewshot 5 \
 			--batch_size auto \
-			--output_path ./${benchmark}.json
+			--output_path ./${benchmark}.json \
+                        --trust_remote_code
 
 		benchmark="gsm8k"
 		lm_eval --model vllm \
@@ -129,7 +137,8 @@ function run_benchmark() {
 			--tasks gsm8k \
 			--num_fewshot 5 \
 			--batch_size auto \
-			--output_path ./${benchmark}.json
+			--output_path ./${benchmark}.json \
+                        --trust_remote_code
 
 		upload_results . $end
 
