@@ -39,11 +39,13 @@ function run_benchmark() {
 	export TRUST_REMOTE_CODE=$trust_remote_code
 
 	if [ "$benchmark" == "nous" ]; then
-		git clone -b add-agieval https://github.com/dmahan93/lm-evaluation-harness
+		git clone --depth 1 https://github.com/EleutherAI/lm-evaluation-harness
 		cd lm-evaluation-harness || exit 1
 		pip install --upgrade pip
-		pip install -e ".[vllm,openai]" || exit 1
-		pip install --upgrade requests accelerate sentencepiece pytablewriter einops protobuf huggingface_hub accelerate || exit 1
+		pip install -e . || exit 1
+                pip install -e ".[openai]"
+		pip install -e ".[vllm]"
+		pip install -U requests accelerate sentencepiece pytablewriter einops protobuf accelerate || exit 1
 
 		# Several benchmarks are run with different tasks, each writing results to a JSON file.
 		benchmark="agieval"
