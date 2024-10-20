@@ -3,7 +3,7 @@ function install_dependencies() {
 	DEBIAN_FRONTEND=noninteractive apt-get update -y &&
 		DEBIAN_FRONTEND=noninteractive apt-get install -y vim git-lfs
 	echo "Installing Python libraries..."
- 	pip install -U requests accelerate sentencepiece pytablewriter einops protobuf accelerate flash-attention --progress-bar on --use-feature=fast-deps -j $(nproc) || {
+ 	pip install -U requests accelerate sentencepiece pytablewriter einops protobuf accelerate flash-attention --progress-bar on --use-feature=fast-deps || {
 		echo "Failed to install Python libraries"
 		exit 1
 	}
@@ -41,8 +41,8 @@ function run_benchmark() {
 	if [ "$benchmark" == "nous" ]; then
 		git clone --depth 1 https://github.com/EleutherAI/lm-evaluation-harness
 		cd lm-evaluation-harness || exit 1
-		pip install --upgrade pip --progress-bar on --use-feature=fast-deps -j $(nproc) || exit 1
-                pip install -e ".[openai,vllm]" --progress-bar on --use-feature=fast-deps -j $(nproc) || exit 1
+		pip install --upgrade pip --progress-bar on --use-feature=fast-deps || exit 1
+                pip install -e ".[openai,vllm]" --progress-bar on --use-feature=fast-deps || exit 1
 
 		# Several benchmarks are run with different tasks, each writing results to a JSON file.
 		benchmark="agieval"
@@ -90,8 +90,8 @@ function run_benchmark() {
 	elif [ "$benchmark" == "openllm" ]; then
 		git clone --depth 1 https://github.com/EleutherAI/lm-evaluation-harness
 		cd lm-evaluation-harness || exit 1
-		pip install --upgrade pip --progress-bar on --use-feature=fast-deps -j $(nproc) || exit 1
-                pip install -e ".[openai,vllm]" --progress-bar on --use-feature=fast-deps -j $(nproc) || exit 1
+		pip install --upgrade pip --progress-bar on --use-feature=fast-deps || exit 1
+                pip install -e ".[openai,vllm]" --progress-bar on --use-feature=fast-deps || exit 1
 		pip install -U requests accelerate sentencepiece pytablewriter einops protobuf accelerate || exit 1
 
 		# Several benchmarks are run with different tasks, each writing results to a JSON file.
