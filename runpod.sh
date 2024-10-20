@@ -36,7 +36,8 @@ function run_benchmark() {
 	local cuda_devices=$4
 	export BENCHMARK=$benchmark
 	export MODEL=$model
-	export TRUST_REMOTE_CODE=True
+	export TRUST_REMOTE_CODE=true
+        export HF_DATASETS_TRUST_REMOTE_CODE=true
 
 	if [ "$benchmark" == "nous" ]; then
 		git clone --depth 1 https://github.com/EleutherAI/lm-evaluation-harness
