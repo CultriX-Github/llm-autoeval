@@ -1,9 +1,7 @@
 function install_dependencies() {
-	# Update package lists and install vim and git-lfs.
 	echo "Updating package lists..."
 	DEBIAN_FRONTEND=noninteractive apt-get update -y &&
 		DEBIAN_FRONTEND=noninteractive apt-get install -y vim git-lfs
-	# Install Python libraries: requests, accelerate, sentencepiece, pytablewriter, einops, and protobuf.
 	echo "Installing Python libraries..."
 	pip install --upgrade requests accelerate sentencepiece pytablewriter einops protobuf flash-attention --progress-bar on || {
 		echo "Failed to install Python libraries"
@@ -12,28 +10,22 @@ function install_dependencies() {
 }
 
 function setup_cuda_devices() {
-	# Count the number of NVIDIA GPUs available
 	local gpu_count=$(nvidia-smi -L | wc -l)
-	# If no NVIDIA GPUs are detected, print a message and exit the script.
 	if [ $gpu_count -eq 0 ]; then
 		echo "No NVIDIA GPUs detected. Exiting."
 		exit 1
 	fi
-	# Construct the CUDA device string
 	local cuda_devices=""
 	for ((i = 0; i < gpu_count; i++)); do
 		[ $i -gt 0 ] && cuda_devices+=","
-		# Create a string of CUDA device IDs (0,1,2,...) based on the number of GPUs.
 		cuda_devices+="$i"
 	done
 	echo $cuda_devices
 }
 
 function upload_results() {
-	# Record the end time and calculate the elapsed time.
 	end=$(date +%s)
 	echo "Elapsed Time: $((end - start)) seconds"
-	# Run another Python script to upload the results as a GitHub gist.
 	python ../main.py . $((end - start))
 }
 
@@ -46,21 +38,13 @@ function run_benchmark() {
 	export MODEL=$model
 	export TRUST_REMOTE_CODE=$trust_remote_code
 
-	# Run evaluation based on the BENCHMARK environment variable
-	# The following block is executed if BENCHMARK is set to 'nous'.
 	if [ "$benchmark" == "nous" ]; then
-		# Clone a specific branch of a GitHub repository
 		git clone -b add-agieval https://github.com/dmahan93/lm-evaluation-harness
-		# Enter the directory of the cloned repository
-		cd lm-evaluation-harness || {
-			echo "Failed to enter the lm-evaluation-harness directory"
-			exit 1
-		}
-		# Install its contents
+		cd lm-evaluation-harness || exit 1
 		pip install --upgrade pip
-                pip install -e ".[vllm,openai]"
-	        pip install --upgrade requests accelerate sentencepiece pytablewriter einops protobuf huggingface_hub accelerate
-	 
+		pip install -e ".[vllm,openai]" || exit 1
+		pip install --upgrade requests accelerate sentencepiece pytablewriter einops protobuf huggingface_hub accelerate || exit 1
+
 		# Several benchmarks are run with different tasks, each writing results to a JSON file.
 		benchmark="agieval"
 		TRUST_REMOTE_CODE=True lm-eval \
@@ -100,20 +84,11 @@ function run_benchmark() {
 
 		upload_results . $end
 
-	# Run evaluation based on the BENCHMARK environment variable
-	# The following block is executed if BENCHMARK is set to 'openllm'.
 	elif [ "$benchmark" == "openllm" ]; then
-		# Clone a specific branch of a GitHub repository
 		git clone https://github.com/EleutherAI/lm-evaluation-harness
-		# Enter the directory of the cloned repository
-		cd lm-evaluation-harness || {
-			echo "Failed to enter the lm-evaluation-harness directory"
-			exit 1
-		}
-		# Install its contents
-		pip install -e ".[openai,vllm,
-		pip install -e ".[vllm,promptsource]"
-		pip install langdetect immutabledict
+		cd lm-evaluation-harness || exit 1
+		pip install -e ".[openai,vllm]" || exit 1
+		pip install langdetect immutabledict || exit 1
 
 		# Several benchmarks are run with different tasks, each writing results to a JSON file.
 		benchmark="arc"
@@ -131,15 +106,6 @@ function run_benchmark() {
 			--num_fewshot 10 \
 			--batch_size auto \
 			--output_path ./${benchmark}.json
-
-		# benchmark="mmlu"
-		# lm_eval --model vllm \
-		#     --model_args pretrained=${MODEL},dtype=auto,gpu_memory_utilization=0.8,trust_remote_code=$TRUST_REMOTE_CODE \
-		#     --tasks mmlu \
-		#     --num_fewshot 5 \
-		#     --batch_size auto \
-		#     --verbosity DEBUG \
-		#     --output_path ./${benchmark}.json
 
 		benchmark="truthfulqa"
 		lm_eval --model vllm \
@@ -166,7 +132,7 @@ function run_benchmark() {
 			--output_path ./${benchmark}.json
 
 		upload_results . $end
-	# Give an error message if an invalid benchmark is specified
+
 	else
 		echo "Invalid benchmark specified"
 		return
@@ -174,7 +140,6 @@ function run_benchmark() {
 }
 
 # Main script starts here
-# Get some user input:
 echo "Benchmarking Model Script"
 read -p "The model you want to benchmark: " MODEL
 export MODEL=$MODEL
@@ -193,19 +158,14 @@ while [[ $BENCHMARK != "nous" && $BENCHMARK != "openllm" ]]; do
 	read -p "Enter benchmark: " BENCHMARK
 done
 
-# Record the start time of the script.
 start=$(date +%s)
 cuda_devices=$(setup_cuda_devices)
 
 install_dependencies
 run_benchmark $BENCHMARK $MODEL $TRUST_REMOTE_CODE $cuda_devices
 
-# If in debug mode, print a message indicating that.
 if [ "$DEBUG" == "False" ]; then
 	runpodctl remove pod $RUNPOD_POD_ID
 fi
 
 echo "Benchmark completed successfully."
-if [ "$DEBUG" == "False" ]; then
-	runpodctl remove pod $RUNPOD_POD_ID
-fi
