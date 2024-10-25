@@ -32,11 +32,11 @@ bootstrap() {
 
         cat <<EOF >requirements.txt
 -e .[openai,vllm,math,sentencepiece,zeno,hf_transfer]
-pytablewriter einops protobuf tinyBenchmarks
+pytablewriter einops protobuf
 EOF
 
-        pip install --upgrade --no-cache-dir --prefer-binary pip setuptools wheel
-        pip install -r requirements.txt --progress-bar on --use-feature=fast-deps --prefer-binary || {
+        MAKEFLAGS=$MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL=$CMAKE_BUILD_PARALLEL_LEVEL pip install --upgrade --no-cache-dir --prefer-binary pip setuptools wheel
+        MAKEFLAGS=$MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL=$CMAKE_BUILD_PARALLEL_LEVEL pip install -r requirements.txt --progress-bar on --use-feature=fast-deps --prefer-binary || {
                 echo "Failed to install Python libraries"
                 exit 1
         }
@@ -59,12 +59,15 @@ eval_function() {
 
         case "$BENCHMARKRUN" in
         "tiny:no")
+                MAKEFLAGS=$MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL=$CMAKE_BUILD_PARALLEL_LEVEL pip install git+https://github.com/felipemaiapolo/tinyBenchmarks --no-cache-dir --prefer-binary
                 lm_eval $common_args --tasks tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande
                 ;;
         "tiny:yes")
+                MAKEFLAGS=$MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL=$CMAKE_BUILD_PARALLEL_LEVEL pip install git+https://github.com/felipemaiapolo/tinyBenchmarks --no-cache-dir --prefer-binary
                 lm_eval $common_args --tasks tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande --apply_chat_template --fewshot_as_multiturn
                 ;;
         "tiny:both")
+                MAKEFLAGS=$MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL=$CMAKE_BUILD_PARALLEL_LEVEL pip install git+https://github.com/felipemaiapolo/tinyBenchmarks --no-cache-dir --prefer-binary
                 lm_eval $common_args --tasks tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande
                 lm_eval $common_args --tasks tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande --apply_chat_template --fewshot_as_multiturn
                 ;;
