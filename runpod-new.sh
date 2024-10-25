@@ -31,9 +31,12 @@ bootstrap() {
         cd lm-evaluation-harness
 
         cat <<EOF >requirements.txt
--e .[openai,vllm,math,sentencepiece,zeno,hf_transfer]
-pytablewriter einops protobuf
+-e .[openai,vllm,math,sentencepiece,zeno,hf_transfer] ;
+pytablewriter
+einops
+protobuf
 EOF
+
 
         MAKEFLAGS=$MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL=$CMAKE_BUILD_PARALLEL_LEVEL pip install --upgrade --no-cache-dir --prefer-binary pip setuptools wheel
         MAKEFLAGS=$MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL=$CMAKE_BUILD_PARALLEL_LEVEL pip install -r requirements.txt --progress-bar on --use-feature=fast-deps --prefer-binary || {
