@@ -2,7 +2,6 @@
 
 ### FUNCTIONS ###
 check_variables() {
-        # Verify that critical environment variables are set
         : "${HF_TOKEN:=$(read -r -p 'Please set HF_TOKEN: ' tmp && echo $tmp)}"
         : "${MODEL:=$(read -r -p 'Please set MODEL: ' tmp && echo $tmp)}"
         : "${BENCHMARK:=$(read -r -p 'Please set BENCHMARK: ' tmp && echo $tmp)}"
@@ -55,20 +54,30 @@ upload_results() {
 }
 
 eval_function() {
-        export BENCHMARKRUN=$BENCHMARK:$CHAT_MODEL
-        export TASKS="tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande"
-        local common_args="--model hf --model_args pretrained=$MODEL,dtype=auto --tasks $TASKS --device cuda:$cuda_devices --batch_size auto --output_path ./${BENCHMARK}.json --trust_remote_code"
+        export BENCHMARKRUN="$BENCHMARK:$CHAT_MODEL"
+        local common_args="--model hf --model_args pretrained=$MODEL,dtype=auto --device cuda:$cuda_devices --batch_size auto --output_path ./${BENCHMARK}.json --trust_remote_code"
 
         case "$BENCHMARKRUN" in
         "tiny:no")
-                lm_eval $common_args
+                lm_eval $common_args --tasks tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande
                 ;;
         "tiny:yes")
-                lm_eval $common_args --apply_chat_template --fewshot_as_multiturn
+                lm_eval $common_args --tasks tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande --apply_chat_template --fewshot_as_multiturn
                 ;;
         "tiny:both")
-                lm_eval $common_args
-                lm_eval $common_args --apply_chat_template --fewshot_as_multiturn
+                lm_eval $common_args --tasks tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande
+                lm_eval $common_args --tasks tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande --apply_chat_template --fewshot_as_multiturn
+                ;;
+        "nous" | "nous:*")
+                declare -A benchmarks=(
+                        ["agieval"]="agieval_aqua_rat,agieval_logiqa_en,agieval_lsat_ar,agieval_lsat_lr,agieval_lsat_rc,agieval_sat_en,agieval_sat_en_without_passage,agieval_sat_math"
+                        ["gpt4all"]="hellaswag,openbookqa,winogrande,arc_easy,arc_challenge,boolq,piqa"
+                        ["truthfulqa"]="truthfulqa_mc"
+                        ["bigbench"]="bigbench_causal_judgement,bigbench_date_understanding,bigbench_disambiguation_qa,bigbench_geometric_shapes,bigbench_logical_deduction_five_objects,bigbench_logical_deduction_seven_objects,bigbench_logical_deduction_three_objects,bigbench_movie_recommendation,bigbench_navigate,bigbench_reasoning_about_colored_objects,bigbench_ruin_names,bigbench_salient_translation_error_detection,bigbench_snarks,bigbench_sports_understanding,bigbench_temporal_sequences,bigbench_tracking_shuffled_objects_five_objects,bigbench_tracking_shuffled_objects_seven_objects,bigbench_tracking_shuffled_objects_three_objects"
+                )
+                for bm in "${!benchmarks[@]}"; do
+                        lm_eval $common_args --tasks "${benchmarks[$bm]}" --output_path ./${bm}.json
+                done
                 ;;
         *)
                 echo "Invalid benchmark specified"
