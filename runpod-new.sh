@@ -6,7 +6,6 @@ check_variables() {
         : "${MODEL:=$(read -r -p 'Please set MODEL: ' tmp && echo $tmp)}"
         : "${BENCHMARK:=$(read -r -p 'Please set BENCHMARK: ' tmp && echo $tmp)}"
         : "${GITHUB_API_TOKEN:=$(read -r -p 'Please set GITHUB_API_TOKEN: ' tmp && echo $tmp)}"
-        : "${CHAT_MODEL:=$(read -r -p 'Please set CHAT_MODEL: ' tmp && echo $tmp)}"
 }
 
 setup_cuda_devices() {
@@ -57,22 +56,18 @@ upload_results() {
 }
 
 eval_function() {
-        export BENCHMARKRUN="$BENCHMARK:$CHAT_MODEL"
         local common_args="--model hf --model_args pretrained=$MODEL,dtype=auto --device cuda:$cuda_devices --batch_size auto --output_path ./${BENCHMARK}.json --trust_remote_code"
 
-        case "$BENCHMARKRUN" in
-        "tiny:no")
+        case "$BENCHMARK" in
+        "tiny")
                 MAKEFLAGS=$MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL=$CMAKE_BUILD_PARALLEL_LEVEL pip install git+https://github.com/felipemaiapolo/tinyBenchmarks --no-cache-dir --prefer-binary
-                lm_eval $common_args --tasks tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande
+                TASKS="tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande"
+                lm_eval $common_args --tasks "$TASKS"
                 ;;
-        "tiny:yes")
+        "tinychat")
                 MAKEFLAGS=$MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL=$CMAKE_BUILD_PARALLEL_LEVEL pip install git+https://github.com/felipemaiapolo/tinyBenchmarks --no-cache-dir --prefer-binary
-                lm_eval $common_args --tasks tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande --apply_chat_template --fewshot_as_multiturn
-                ;;
-        "tiny:both")
-                MAKEFLAGS=$MAKEFLAGS CMAKE_BUILD_PARALLEL_LEVEL=$CMAKE_BUILD_PARALLEL_LEVEL pip install git+https://github.com/felipemaiapolo/tinyBenchmarks --no-cache-dir --prefer-binary
-                lm_eval $common_args --tasks tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande
-                lm_eval $common_args --tasks tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande --apply_chat_template --fewshot_as_multiturn
+                TASKS="tinyArc,tinyHellaswag,tinyMMLU,tinyTruthfulQA,tinyTruthfulQA_mc1,tinyWinogrande"
+                lm_eval $common_args --tasks "$TASKS" --apply_chat_template --fewshot_as_multiturn
                 ;;
         "nous" | "nous:*")
                 declare -A benchmarks=(
@@ -102,8 +97,5 @@ check_variables
 cuda_devices=$(setup_cuda_devices)
 bootstrap
 huggingface_login
-
-echo "Starting screen session..."
-screen -dmL -S eval bash -c "$(declare -f eval_function); eval_function; exec bash"
-echo "[$(date +%F_%T)]: Starting evaluation in screen session: eval"
-wait
+eval_function
+end=$(date +%s)
