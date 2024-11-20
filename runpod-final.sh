@@ -43,13 +43,14 @@ EOF
 generate_summary_and_upload() {
     local directory=$1
     local elapsed_time=$2
+    local result_file="/tmp/benchmark_summary.md"
 
-    python3 - <<EOF
+    python3 - <<EOF > "$result_file"
 import os
 import json
 import time
+import requests
 from llm_autoeval.table import make_table, make_final_table
-from llm_autoeval.upload import upload_to_github_gist
 
 directory = "$directory"
 elapsed_time = float("$elapsed_time")
@@ -108,9 +109,27 @@ summary += f"\nElapsed time: {elapsed}"
 final_table = make_final_table({k: v for k, v in zip(tasks, averages)}, model)
 summary = final_table + "\n\n" + summary
 
+print(summary)
+
 # Upload to GitHub Gist
-upload_to_github_gist(summary, f"{model.split('/')[-1]}-{benchmark.capitalize()}.md", github_api_token)
+gist_url = "https://api.github.com/gists"
+headers = {"Authorization": f"token {github_api_token}"}
+data = {
+    "description": f"Benchmark results for {model} - {benchmark}",
+    "public": True,
+    "files": {
+        f"{model.split('/')[-1]}-{benchmark.capitalize()}.md": {"content": summary}
+    }
+}
+
+response = requests.post(gist_url, headers=headers, json=data)
+if response.status_code == 201:
+    print(f"Gist successfully created: {response.json()['html_url']}")
+else:
+    print(f"Failed to create Gist: {response.status_code} - {response.json()}")
 EOF
+
+    cat "$result_file"
 }
 
 eval_function() {
