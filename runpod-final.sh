@@ -7,6 +7,12 @@ check_variables() {
     : "${MODEL:=$(read -r -p 'Please set MODEL: ' tmp && echo $tmp)}"
     : "${BENCHMARK:=$(read -r -p 'Please set BENCHMARK: ' tmp && echo $tmp)}"
     : "${GITHUB_API_TOKEN:=$(read -r -p 'Please set GITHUB_API_TOKEN: ' tmp && echo $tmp)}"
+
+    # Validate GitHub token
+    if ! curl -H "Authorization: token $GITHUB_API_TOKEN" -s https://api.github.com/user | grep -q login; then
+        echo "Invalid GITHUB_API_TOKEN. Please check and try again."
+        exit 1
+    fi
 }
 
 setup_cuda_devices() {
@@ -38,98 +44,6 @@ EOF
 
     pip install --upgrade --no-cache-dir pip setuptools wheel
     pip install -r requirements.txt
-}
-
-generate_summary_and_upload() {
-    local directory=$1
-    local elapsed_time=$2
-    local result_file="/tmp/benchmark_summary.md"
-
-    python3 - <<EOF > "$result_file"
-import os
-import json
-import time
-import requests
-from llm_autoeval.table import make_table, make_final_table
-
-directory = "$directory"
-elapsed_time = float("$elapsed_time")
-model = os.getenv("MODEL")
-benchmark = os.getenv("BENCHMARK")
-github_api_token = os.getenv("GITHUB_API_TOKEN")
-
-tasks = []
-if benchmark == "openllm":
-    tasks = ["ARC", "HellaSwag", "MMLU", "TruthfulQA", "Winogrande", "GSM8K"]
-elif benchmark == "nous":
-    tasks = ["AGIEval", "GPT4All", "TruthfulQA", "Bigbench"]
-elif benchmark == "tiny":
-    tasks = ["tinyArc", "tinyHellaswag", "tinyMMLU", "tinyTruthfulQA", "tinyTruthfulQA_mc1", "tinyWinogrande"]
-elif benchmark == "tinychat":
-    tasks = ["tinyArc", "tinyHellaswag", "tinyMMLU", "tinyTruthfulQA", "tinyTruthfulQA_mc1", "tinyWinogrande"]
-else:
-    raise ValueError(f"Invalid BENCHMARK value: {benchmark}")
-
-tables = []
-averages = []
-
-for task in tasks:
-    file_path = os.path.join(directory, f"{task.lower()}.json")
-    if os.path.exists(file_path):
-        with open(file_path, "r") as f:
-            data = json.load(f)
-        table, average = make_table(data, task)
-    else:
-        table = f"### {task}\nError: File does not exist\n\n"
-        average = None
-
-    tables.append(table)
-    averages.append(average)
-
-summary = ""
-for i, task in enumerate(tasks):
-    summary += tables[i]
-    if averages[i] is not None:
-        summary += f"Average: {averages[i]}%\n\n"
-    else:
-        summary += "Average: Not available due to error\n\n"
-
-# Calculate final average
-if all(isinstance(avg, float) for avg in averages):
-    final_average = round(sum(averages) / len(averages), 2)
-    summary += f"Average score: {final_average}%\n"
-else:
-    summary += "Average score: Not available due to errors\n"
-
-# Add elapsed time
-elapsed = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
-summary += f"\nElapsed time: {elapsed}"
-
-# Final table
-final_table = make_final_table({k: v for k, v in zip(tasks, averages)}, model)
-summary = final_table + "\n\n" + summary
-
-print(summary)
-
-# Upload to GitHub Gist
-gist_url = "https://api.github.com/gists"
-headers = {"Authorization": f"token {github_api_token}"}
-data = {
-    "description": f"Benchmark results for {model} - {benchmark}",
-    "public": True,
-    "files": {
-        f"{model.split('/')[-1]}-{benchmark.capitalize()}.md": {"content": summary}
-    }
-}
-
-response = requests.post(gist_url, headers=headers, json=data)
-if response.status_code == 201:
-    print(f"Gist successfully created: {response.json()['html_url']}")
-else:
-    print(f"Failed to create Gist: {response.status_code} - {response.json()}")
-EOF
-
-    cat "$result_file"
 }
 
 eval_function() {
@@ -164,6 +78,13 @@ eval_function() {
     esac
 }
 
+upload_results() {
+    local directory=$1
+    local elapsed_time=$2
+
+    python3 ../main.py "$directory" "$elapsed_time"
+}
+
 ### MAIN EXECUTION ###
 
 set -e
@@ -178,4 +99,4 @@ eval_function
 end_time=$(date +%s)
 
 elapsed_time=$((end_time - start_time))
-generate_summary_and_upload "$(pwd)" "$elapsed_time"
+upload_results "$(pwd)" "$elapsed_time"
